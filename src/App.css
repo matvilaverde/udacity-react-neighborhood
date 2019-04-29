@@ -13,6 +13,7 @@ html, body {
 }
 
 .options-box {
+  float: left;
   background: #fff;
   border: 1px solid #999;
   border-radius: 3px;
