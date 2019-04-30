@@ -37,7 +37,13 @@ class App extends Component {
       if(marker.title === option) {
         this.state.infowindow.setContent(option)
         this.state.infowindow.open(this.state.map, marker)
+        if (marker.getAnimation() !== null) {
+          marker.setAnimation(null);
+        } else {
+          marker.setAnimation(window.google.maps.Animation.BOUNCE);
+        }
       }
+      marker.setAnimation(null)
     })
   }
   
@@ -80,6 +86,12 @@ class App extends Component {
       marker.addListener('click', function() {
         buildInfowindow.setContent(contentString)
         buildInfowindow.open(map, marker)
+        if (marker.getAnimation() !== null) {
+          marker.setAnimation(null);
+        } else {
+          marker.setAnimation(window.google.maps.Animation.BOUNCE);
+        }
+        marker.setAnimation(null)
       })
       
       bounds.extend(marker.position);
