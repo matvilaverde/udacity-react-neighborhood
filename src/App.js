@@ -1,15 +1,19 @@
 import React, { Component } from 'react';
 import './App.css';
+import * as FourSquareAPI from './components/FourSquareAPI'
 
 class App extends Component {
 
   state = {
     map: {},
     markers: [],
-    infowindow: {}
+    infowindow: {},
+    venues: []
   }
 
   componentDidMount() {
+    // Descomentar linha abaixo para ver o erro do get
+    //FourSquareAPI.get().then((res) => console.log(res))
     this.renderMap();
   }
 
@@ -60,13 +64,13 @@ class App extends Component {
     
     let bounds = new window.google.maps.LatLngBounds();
     
-    let buildMarkers = [];
+    let buildMarkers = this.state.venues;
     
-    for(let i=0; i<this.locations.length; i++) {
-      let lat = this.locations[i].position.lat
-      let lng = this.locations[i].position.lng
+    for(let i=0; i<buildMarkers.length; i++) {
+      let lat = buildMarkers[i].location.lat
+      let lng = buildMarkers[i].location.lng
       let position = {lat, lng}
-      let title = this.locations[i].title
+      let title = buildMarkers[i].name
 
       let marker = new window.google.maps.Marker({
         id: i,
@@ -81,7 +85,7 @@ class App extends Component {
 
       buildMarkers.push(marker);
 
-      let contentString = `${this.locations[i].title}`
+      let contentString = `${buildMarkers[i].name}`
 
       marker.addListener('click', function() {
         buildInfowindow.setContent(contentString)
