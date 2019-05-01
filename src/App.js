@@ -11,11 +11,16 @@ class App extends Component {
     venues: []
   }
 
-  componentDidMount() {
+  componentWillMount() {
+    let state = this.state
     get(function(resp){ // Obtains an array from Foursquare API
-      console.log(resp) // How can I use it? I want the value to be on state.venues
-    })
+      state.venues = resp
+      console.log(state.venues)
+    }) 
+  }
 
+  componentDidMount() {
+    console.log(this.state.venues)
     this.renderMap(); // Begins the map render
   }
 
