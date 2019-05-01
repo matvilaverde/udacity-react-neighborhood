@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import './App.css';
-import * as FourSquareAPI from './components/FourSquareAPI'
+import { get } from './components/FourSquareAPI'
 
 class App extends Component {
 
@@ -12,7 +12,12 @@ class App extends Component {
   }
 
   componentDidMount() {
-    // Descomentar linha abaixo para ver o erro do get
+    
+    get(function(resp){
+      console.log(resp)
+    })
+    
+    //aylmao
     //FourSquareAPI.get().then((res) => console.log(res))
     this.renderMap();
   }
@@ -103,57 +108,57 @@ class App extends Component {
     }
 
     this.setState({markers: buildMarkers, map: map, infowindow: buildInfowindow});
-        
+
     document.getElementById('show-listings').addEventListener('click', this.showListings);
     document.getElementById('hide-listings').addEventListener('click', this.hideListings);
   }
 
   locations = [
-    {
-        title: 'Jack Rock Bar',
-        position: {lat: -19.9397354, lng: -43.9318726}
-    }, {
-        title: 'Lord Pub',
-        position: {lat: -19.9402615, lng: -43.9365341}
-    }, {
-        title: 'Estágio Rock Bar',
-        position: {lat: -19.941599, lng: -43.937418}
-    }, {
-        title: 'Beb\'s Contorno',
-        position: {lat: -19.9407569, lng: -43.9363852}
-    }, {
-        title: 'Rock Esporte Clube',
-        position: {lat: -19.9403498, lng: -43.9380091}
-    }
+  {
+    title: 'Jack Rock Bar',
+    position: {lat: -19.9397354, lng: -43.9318726}
+  }, {
+    title: 'Lord Pub',
+    position: {lat: -19.9402615, lng: -43.9365341}
+  }, {
+    title: 'Estágio Rock Bar',
+    position: {lat: -19.941599, lng: -43.937418}
+  }, {
+    title: 'Beb\'s Contorno',
+    position: {lat: -19.9407569, lng: -43.9363852}
+  }, {
+    title: 'Rock Esporte Clube',
+    position: {lat: -19.9403498, lng: -43.9380091}
+  }
   ]
 
   render() {
     return (
       <main>
-        <div className="container">
-          <div className="options-box">
-            <h1>Find Rock Bars Near You!</h1>
-            <div>
-              <input id="show-listings" type="button" value="Show Listings" onClick={this.showMarkers}/>
-              <input id="hide-listings" type="button" value="Hide Listings" onClick={this.hideMarkers} />
-            </div>
-            <select onChange={e => this.dropdownSelected(e.target.value)}>
-              <option value="" />
-              {this.state.markers.map(bars =>
-                <option key={bars.id}>
-                  {bars.title}
-                </option>
-              )}
-            </select>
-          </div>
-          <div id="map"></div>
+      <div className="container">
+      <div className="options-box">
+      <h1>Find Rock Bars Near You!</h1>
+      <div>
+      <input id="show-listings" type="button" value="Show Listings" onClick={this.showMarkers}/>
+      <input id="hide-listings" type="button" value="Hide Listings" onClick={this.hideMarkers} />
+      </div>
+      <select onChange={e => this.dropdownSelected(e.target.value)}>
+      <option value="" />
+      {this.state.markers.map(bars =>
+        <option key={bars.id}>
+        {bars.title}
+        </option>
+        )}
+        </select>
         </div>
-      </main>
-    );
+        <div id="map"></div>
+        </div>
+        </main>
+        );
+    }
   }
-}
 
-function loadScript(url) {
+  function loadScript(url) {
   var index = window.document.getElementsByTagName('script')[0]; // Selects first script tag
   var script = window.document.createElement('script'); // Creates script tag
   script.src = url; // Inserts the source property using the argument
