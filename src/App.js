@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import './App.css';
-import { get } from './components/FourSquareAPI'
+import { get } from './components/FourSquareAPI' // get is the API request to get the app's venues
 
 class App extends Component {
 
@@ -12,34 +12,34 @@ class App extends Component {
   }
 
   componentDidMount() {
-    
-    //Keep going from here. You can use an callback any way you want.
-    get(function(resp){
-      console.log(resp)
+    get(function(resp){ // Obtains an array from Foursquare API
+      console.log(resp) // How can I use it? I want the value to be on state.venues
     })
-    
-    //aylmao
-    //FourSquareAPI.get().then((res) => console.log(res))
-    this.renderMap();
+
+    this.renderMap(); // Begins the map render
   }
 
+  // Since Google Maps API needs the <script>, let's create it and start the map
   renderMap = () => {
     loadScript('https://maps.googleapis.com/maps/api/js?key=AIzaSyAOFG5MfWrnTNAlxiYoko5BOd6s5RTHrhY&callback=initMap')
     window.initMap = this.initMap
   }
 
+  // Button that associates markers to the map, showing them all again
   showListings = () => {
     for(var i=0; i<this.state.markers.length; i++) {
       this.state.markers[i].setMap(this.state.map);
     }
   }
 
+  // Button that disassociates markers from the map, hiding them all
   hideListings = () => {
     for(var i=0; i<this.state.markers.length; i++) {
       this.state.markers[i].setMap(null);
     }
   }
 
+  // When an option from the dropdown is selected, makes everything like a marker click
   dropdownSelected = (option) => {
     let markers = this.state.markers;
     this.state.infowindow.close();
@@ -57,7 +57,9 @@ class App extends Component {
     })
   }
   
+  // The map!
   initMap = () => {
+    // Creates the map at a point of Belo Horizonte, Brazil
     let map = new window.google.maps.Map(document.getElementById('map'), {
       center:{lat: -19.9408184, lng: -43.9355109},
       zoom: 16,
@@ -72,6 +74,7 @@ class App extends Component {
     
     let buildMarkers = this.state.venues;
     
+    // Gets API data and inserts in a bunch of markers, creating them
     for(let i=0; i<buildMarkers.length; i++) {
       let lat = buildMarkers[i].location.lat
       let lng = buildMarkers[i].location.lng
@@ -89,13 +92,17 @@ class App extends Component {
         animation: window.google.maps.Animation.DROP,
       })
 
+      // All markers will be organized here
       buildMarkers.push(marker);
 
+      // Simple content just for the project beggining
       let contentString = `${buildMarkers[i].name}`
 
+      // When a marker gets clicked ..
       marker.addListener('click', function() {
         buildInfowindow.setContent(contentString)
         buildInfowindow.open(map, marker)
+        // .. animates it once and ..
         if (marker.getAnimation() !== null) {
           marker.setAnimation(null);
         } else {
@@ -103,17 +110,18 @@ class App extends Component {
         }
         marker.setAnimation(null)
       })
-      
+      // .. zooms to it, if needed
       bounds.extend(marker.position);
       map.fitBounds(bounds);
     }
-
+    // Stores all map data globally
     this.setState({markers: buildMarkers, map: map, infowindow: buildInfowindow});
 
     document.getElementById('show-listings').addEventListener('click', this.showListings);
     document.getElementById('hide-listings').addEventListener('click', this.hideListings);
   }
 
+  // This will be (not yet) used to local data, maybe
   locations = [
   {
     title: 'Jack Rock Bar',
@@ -136,29 +144,30 @@ class App extends Component {
   render() {
     return (
       <main>
-      <div className="container">
-      <div className="options-box">
-      <h1>Find Rock Bars Near You!</h1>
-      <div>
-      <input id="show-listings" type="button" value="Show Listings" onClick={this.showMarkers}/>
-      <input id="hide-listings" type="button" value="Hide Listings" onClick={this.hideMarkers} />
-      </div>
-      <select onChange={e => this.dropdownSelected(e.target.value)}>
-      <option value="" />
-      {this.state.markers.map(bars =>
-        <option key={bars.id}>
-        {bars.title}
-        </option>
-        )}
-        </select>
-        </div>
-        <div id="map"></div>
-        </div>
+        <div className="container">
+          <div className="options-box">
+            <h1>Find Rock Bars Near You!</h1>
+              <div>
+                <input id="show-listings" type="button" value="Show Listings" onClick={this.showMarkers}/>
+                <input id="hide-listings" type="button" value="Hide Listings" onClick={this.hideMarkers} />
+              </div>
+              <select onChange={e => this.dropdownSelected(e.target.value)}>
+                <option value="" />
+                {this.state.markers.map(bars =>
+                  <option key={bars.id}>
+                  {bars.title}
+                  </option>
+                  )}
+              </select>
+              </div>
+            <div id="map"></div>
+          </div>
         </main>
-        );
+      );
     }
   }
 
+  // Simulates the <script> tag to use the Google Maps API confortly
   function loadScript(url) {
   var index = window.document.getElementsByTagName('script')[0]; // Selects first script tag
   var script = window.document.createElement('script'); // Creates script tag
