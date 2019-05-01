@@ -9,7 +9,6 @@ let todaysData = '20190430'
 //`${api}query=${query}&near=${near}?client_id=${CLIENT_ID}&client_secret=${CLIENT_SECRET}&v=20190430`
 //api + 'query=' + query + '&near=' + near + '&client_id=' + CLIENT_ID + '&client_secret=' + CLIENT_SECRET + '&v=' + todaysData
  export const get = (callback) => {
- 	console.log("in get")
     fetch(api + 'query=' + query + '&near=' + near + '&client_id=' + CLIENT_ID + '&client_secret=' + CLIENT_SECRET + '&v=' + todaysData)
      .then(res => {
      	res.json()

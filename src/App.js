@@ -13,6 +13,7 @@ class App extends Component {
 
   componentDidMount() {
     
+    //Keep going from here. You can use an callback any way you want.
     get(function(resp){
       console.log(resp)
     })
