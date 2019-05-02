@@ -14,8 +14,8 @@ class App extends Component {
   CLIENT_SECRET = 'WQNXVXEP4VIACTXQQ4PLYJIRR4EYKZRYHXF0VNS3IWTQBODW'
   api = "https://api.foursquare.com/v2/venues/search?"
   query = '%22rock%20bar%22';
-  near = 'Belo Horizonte, MG, Brazil';
-  todaysData = '20190430'
+  near = 'New York, United States of America';
+  todaysData = '20190502'
 
   componentDidMount() {
     fetch(this.api + 'query=' + this.query + '&near=' + this.near + '&client_id=' + this.CLIENT_ID +
@@ -52,20 +52,21 @@ class App extends Component {
   }
 
   // When an option from the dropdown is selected, makes everything like a marker click
-  dropdownSelected = (option) => {
-    let markers = this.state.markers;
+  dropdownSelected = (barTitle) => {
     this.state.infowindow.close();
+
+    let markers = this.state.markers;
     markers.forEach((marker) => {
-      if(marker.title === option) {
-        this.state.infowindow.setContent(option)
+      if(marker.title === barTitle) {
+        this.state.infowindow.setContent(barTitle)
         this.state.infowindow.open(this.state.map, marker)
         if (marker.getAnimation() !== null) {
           marker.setAnimation(null);
         } else {
           marker.setAnimation(window.google.maps.Animation.BOUNCE);
         }
+        marker.setAnimation(null)
       }
-      marker.setAnimation(null)
     })
   }
   
@@ -83,6 +84,8 @@ class App extends Component {
     let buildInfowindow = new window.google.maps.InfoWindow();
     
     let bounds = new window.google.maps.LatLngBounds();
+
+    //let geocoder = new window.google.maps.Geocoder();
     
     let buildMarkers = this.state.venues;
 
@@ -92,7 +95,29 @@ class App extends Component {
     for(let i=0; i<buildMarkers.length; i++) {
       let position = {lat: buildMarkers[i].location.lat, lng: buildMarkers[i].location.lng};
       let name = buildMarkers[i].name;
+
+      /*
+        Since Geocoder needs billing information that I won't provide, I can't make it work with my project.
+        If you are willing to test it with yours, you have to uncomment:
+        - the 'let geocoder' line;
+        - the let address below;
+        - geocoder.geocode function.
+        Then, comment out the "let address" and if below.
+
+        let address;
+        geocoder.geocode({'location': position}, function(results, status) {
+          if (status === 'OK') {
+            if(results[0]) {
+              address = results[0].formatted_address;
+            }
+          }
+        })
+      */
+
       let address = buildMarkers[i].location.address;
+      if(address === undefined) {
+        address = 'There\'s no address on FourSquare'
+      }
       let lat = buildMarkers[i].location.lat;
       let lng = buildMarkers[i].location.lng;
 
@@ -111,15 +136,17 @@ class App extends Component {
       // All markers will be organized here
       allMarkers.push(marker);
 
-      // Simple content just for the project beggining
-      let contentString = `${buildMarkers[i].name}`
-
       // When a marker gets clicked ..
       marker.addListener('click', function() {
         buildInfowindow.setContent(
-          '<div><p style="color:#FFAA22">' +
-            contentString +
-          "</p></div>"
+          '<div>' +
+            '<h1>' +
+             name +
+            '</h1>' +
+            '<p><span style="font-weight: bold">Address:</span> ' +
+             address +
+            '</p>' +
+          '</div>'
         )
         buildInfowindow.open(map, marker)
         // .. animates it once and ..
@@ -134,6 +161,17 @@ class App extends Component {
       bounds.extend(marker.position);
       map.fitBounds(bounds);
     }
+
+    // Sort all markers by name
+    allMarkers.sort(function(a, b) {
+      var x = a.name.toLowerCase();
+      var y = b.name.toLowerCase();
+      if (x < y) {return -1;}
+      if (x > y) {return 1;}
+      return 0;
+    })
+    console.log(allMarkers)
+
     // Stores all map data globally
     this.setState({markers: allMarkers, map: map, infowindow: buildInfowindow});
 
@@ -166,7 +204,7 @@ class App extends Component {
       <main>
         <div className="container">
           <div className="options-box">
-            <h1>Find Rock Bars Near You!</h1>
+            <h1>Find Rock Bars Near New York!</h1>
               <div>
                 <input id="show-listings" type="button" value="Show Listings" onClick={this.showMarkers}/>
                 <input id="hide-listings" type="button" value="Hide Listings" onClick={this.hideMarkers} />

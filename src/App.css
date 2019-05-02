@@ -4,6 +4,9 @@
 
 #map {
   height: 100vh;
+  -moz-box-shadow: -3px 0 5px 0 #555;
+  -webkit-box-shadow: -3px 0 5px 0 #555;
+  box-shadow: -3px 0 5px 0 #555;
 }
 
 html, body {
@@ -15,8 +18,6 @@ html, body {
 .options-box {
   float: left;
   background: #fff;
-  border: 1px solid #999;
-  border-radius: 3px;
   height: 100%;
   line-height: 35px;
   padding: 10px 10px 30px 10px;
