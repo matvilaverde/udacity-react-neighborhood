@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import './App.css';
-import { get } from './components/FourSquareAPI' // get is the API request to get the app's venues
 
 class App extends Component {
 
@@ -11,17 +10,25 @@ class App extends Component {
     venues: []
   }
 
-  componentWillMount() {
-    let state = this.state
-    get(function(resp){ // Obtains an array from Foursquare API
-      state.venues = resp
-      console.log(state.venues)
-    }) 
-  }
+  CLIENT_ID = 'JMMI3TQMXGFIN3ZYY5NN4SEGLG0QD31ZRSOUAWUT0FU2KCUF'
+  CLIENT_SECRET = 'WQNXVXEP4VIACTXQQ4PLYJIRR4EYKZRYHXF0VNS3IWTQBODW'
+  api = "https://api.foursquare.com/v2/venues/search?"
+  query = '%22rock%20bar%22';
+  near = 'Belo Horizonte, MG, Brazil';
+  todaysData = '20190430'
 
   componentDidMount() {
-    console.log(this.state.venues)
-    this.renderMap(); // Begins the map render
+    fetch(this.api + 'query=' + this.query + '&near=' + this.near + '&client_id=' + this.CLIENT_ID +
+    '&client_secret=' + this.CLIENT_SECRET + '&v=' + this.todaysData)
+     .then(res => res.json())
+     .then(data => {
+       this.setState({venues: data.response.venues})
+       this.renderMap(); // Begins the map render
+      })
+    .catch( error => {
+        window.alert('An error ocorred: ' + error)
+        console.log(error);
+    })
   }
 
   // Since Google Maps API needs the <script>, let's create it and start the map
@@ -78,34 +85,42 @@ class App extends Component {
     let bounds = new window.google.maps.LatLngBounds();
     
     let buildMarkers = this.state.venues;
+
+    let allMarkers = this.state.markers;
     
     // Gets API data and inserts in a bunch of markers, creating them
     for(let i=0; i<buildMarkers.length; i++) {
-      let lat = buildMarkers[i].location.lat
-      let lng = buildMarkers[i].location.lng
-      let position = {lat, lng}
-      let title = buildMarkers[i].name
+      let position = {lat: buildMarkers[i].location.lat, lng: buildMarkers[i].location.lng};
+      let name = buildMarkers[i].name;
+      let address = buildMarkers[i].location.address;
+      let lat = buildMarkers[i].location.lat;
+      let lng = buildMarkers[i].location.lng;
 
       let marker = new window.google.maps.Marker({
         id: i,
         map: map,
         position: position,
-        name: title,
-        title: title,
+        name: name,
+        title: name,
+        address: address,
         lat: lat,
         lng: lng,
-        animation: window.google.maps.Animation.DROP,
+        animation: window.google.maps.Animation.DROP
       })
 
       // All markers will be organized here
-      buildMarkers.push(marker);
+      allMarkers.push(marker);
 
       // Simple content just for the project beggining
       let contentString = `${buildMarkers[i].name}`
 
       // When a marker gets clicked ..
       marker.addListener('click', function() {
-        buildInfowindow.setContent(contentString)
+        buildInfowindow.setContent(
+          '<div><p style="color:#FFAA22">' +
+            contentString +
+          "</p></div>"
+        )
         buildInfowindow.open(map, marker)
         // .. animates it once and ..
         if (marker.getAnimation() !== null) {
@@ -120,7 +135,7 @@ class App extends Component {
       map.fitBounds(bounds);
     }
     // Stores all map data globally
-    this.setState({markers: buildMarkers, map: map, infowindow: buildInfowindow});
+    this.setState({markers: allMarkers, map: map, infowindow: buildInfowindow});
 
     document.getElementById('show-listings').addEventListener('click', this.showListings);
     document.getElementById('hide-listings').addEventListener('click', this.hideListings);
