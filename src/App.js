@@ -7,33 +7,38 @@ class App extends Component {
     map: {},
     markers: [],
     infowindow: {},
-    venues: []
+    serverVenues: [],
   }
-
+  
   CLIENT_ID = 'JMMI3TQMXGFIN3ZYY5NN4SEGLG0QD31ZRSOUAWUT0FU2KCUF'
   CLIENT_SECRET = 'WQNXVXEP4VIACTXQQ4PLYJIRR4EYKZRYHXF0VNS3IWTQBODW'
-  api = "https://api.foursquare.com/v2/venues/search?"
+  api = "https://api.foursquare.com/v2/venues/"
   query = '%22rock%20bar%22';
   near = 'New York, United States of America';
   todaysData = '20190502'
+  venuesID = []
 
   componentDidMount() {
-    fetch(this.api + 'query=' + this.query + '&near=' + this.near + '&client_id=' + this.CLIENT_ID +
+    // Fetches Rock bars in New York City
+    fetch(this.api + 'search?query=' + this.query + '&near=' + this.near + '&client_id=' + this.CLIENT_ID +
     '&client_secret=' + this.CLIENT_SECRET + '&v=' + this.todaysData)
      .then(res => res.json())
      .then(data => {
-       this.setState({venues: data.response.venues})
-       this.renderMap(); // Begins the map render
+       this.setState({serverVenues: data.response.venues})
+       data.response.venues.forEach(element => {
+         this.venuesID.push(element.id)
+        });
+        this.renderMap(); // Begins the map render
       })
-    .catch( error => {
+      .catch( error => {
         window.alert('An error ocorred: ' + error)
         console.log(error);
-    })
+      })
   }
 
   // Since Google Maps API needs the <script>, let's create it and start the map
   renderMap = () => {
-    loadScript('https://maps.googleapis.com/maps/api/js?key=AIzaSyAOFG5MfWrnTNAlxiYoko5BOd6s5RTHrhY&callback=initMap')
+    loadScript('https://maps.googleapis.com/maps/api/js?key=MYAPIKEY&libraries=geometry&callback=initMap')
     window.initMap = this.initMap
   }
 
@@ -58,7 +63,7 @@ class App extends Component {
     let markers = this.state.markers;
     markers.forEach((marker) => {
       if(marker.title === barTitle) {
-        this.state.infowindow.setContent(barTitle)
+        this.state.infowindow.setContent('will copy and paste from click\'s final version')
         this.state.infowindow.open(this.state.map, marker)
         if (marker.getAnimation() !== null) {
           marker.setAnimation(null);
@@ -69,9 +74,26 @@ class App extends Component {
       }
     })
   }
+
+/*  getData = () => {
+    let places = [];
+    this.venuesID.map((location) =>
+      fetch('https://api.foursquare.com/v2/venues/4b832fc3f964a52065fc30e3?client_id=JMMI3TQMXGFIN3ZYY5NN4SEGLG0QD31ZRSOUAWUT0FU2KCUF&client_secret=WQNXVXEP4VIACTXQQ4PLYJIRR4EYKZRYHXF0VNS3IWTQBODW&v=20190430')
+        .then(response => response.json())
+        .then(data => console.log(data))
+        .catch(error => {
+          console.log(error);
+        })
+    );
+    // Updates the markers state with the data obtained
+    this.setState({venuesInfo: places});
+  }
+*/
   
   // The map!
   initMap = () => {
+    //this.getData();
+    //console.log(this.state.venuesInfo);
     // Creates the map at a point of Belo Horizonte, Brazil
     let map = new window.google.maps.Map(document.getElementById('map'), {
       center:{lat: -19.9408184, lng: -43.9355109},
@@ -87,14 +109,68 @@ class App extends Component {
 
     //let geocoder = new window.google.maps.Geocoder();
     
-    let buildMarkers = this.state.venues;
+    let buildMarkers = this.state.serverVenues;
 
     let allMarkers = this.state.markers;
+
+    // This function populates the infowindow when the marker is clicked. We'll only allow
+      // one infowindow which will open at the marker that is clicked, and populate based
+      // on that markers position.
+      function populateInfoWindow(marker, infowindow, lat, lng) {
+        // Check to make sure the infowindow is not already opened on this marker.
+        if (infowindow.marker !== marker) {
+          // Clear the infowindow content to give the streetview time to load.
+          infowindow.setContent('');
+          infowindow.marker = marker;
+          // Make sure the marker property is cleared if the infowindow is closed.
+          infowindow.addListener('closeclick', function() {
+            infowindow.marker = null;
+          });
+          var streetViewService = new window.google.maps.StreetViewService();
+          var radius = 50;
+          // In case the status is OK, which means the pano was found, compute the
+          // position of the streetview image, then calculate the heading, then get a
+          // panorama from that and set the options
+          function getStreetView(data, status) {
+            if (status === window.google.maps.StreetViewStatus.OK) {
+              var nearStreetViewLocation = data.location.latLng;
+              var heading = window.google.maps.geometry.spherical.computeHeading(
+                nearStreetViewLocation, marker.position);
+                infowindow.setContent('<div>'+
+                '<img src="https://maps.googleapis.com/maps/api/streetview?size=200x200&location='+ marker.lat +','+marker.lng+'&heading=151.78&pitch=-0.76&key=MYAPIKEY&signature=MYSIGNATURE"><br>'+
+                '<h2 class="info-name">'+marker.name+'</h2>'+
+                '<p class="info-address">Address: '+marker.address+'</p>'+
+                '<p class="info-rating">Rating: '+marker.rating+'</p>'+
+                '<p class="info-likes">Likes: '+marker.likes+'</p>'+
+                '<div id="pano"></div>' +
+                '</div>');
+                var panoramaOptions = {
+                  position: nearStreetViewLocation,
+                  pov: {
+                    heading: heading,
+                    pitch: 30
+                  }
+                };
+              var panorama = new window.google.maps.StreetViewPanorama(
+                document.getElementById('pano'), panoramaOptions);
+            } else {
+              infowindow.setContent('<div>' + marker.title + '</div>' +
+                '<div>No Street View Found</div>');
+            }
+          }
+          // Use streetview service to get the closest streetview image within
+          // 50 meters of the markers position
+          streetViewService.getPanoramaByLocation(marker.position, radius, getStreetView);
+          // Open the infowindow on the correct marker.
+          infowindow.open(map, marker);
+        }
+      }
     
     // Gets API data and inserts in a bunch of markers, creating them
     for(let i=0; i<buildMarkers.length; i++) {
       let position = {lat: buildMarkers[i].location.lat, lng: buildMarkers[i].location.lng};
       let name = buildMarkers[i].name;
+      let id = buildMarkers[i].id;
 
       /*
         Since Geocoder needs billing information that I won't provide, I can't make it work with my project.
@@ -120,9 +196,11 @@ class App extends Component {
       }
       let lat = buildMarkers[i].location.lat;
       let lng = buildMarkers[i].location.lng;
+      let ratings = '';
+      let likes = ''
 
       let marker = new window.google.maps.Marker({
-        id: i,
+        id: id,
         map: map,
         position: position,
         name: name,
@@ -130,6 +208,8 @@ class App extends Component {
         address: address,
         lat: lat,
         lng: lng,
+        ratings: ratings,
+        likes: likes,
         animation: window.google.maps.Animation.DROP
       })
 
@@ -138,17 +218,7 @@ class App extends Component {
 
       // When a marker gets clicked ..
       marker.addListener('click', function() {
-        buildInfowindow.setContent(
-          '<div>' +
-            '<h1>' +
-             name +
-            '</h1>' +
-            '<p><span style="font-weight: bold">Address:</span> ' +
-             address +
-            '</p>' +
-          '</div>'
-        )
-        buildInfowindow.open(map, marker)
+        populateInfoWindow(this, buildInfowindow, lat, lng);
         // .. animates it once and ..
         if (marker.getAnimation() !== null) {
           marker.setAnimation(null);
