@@ -7,7 +7,7 @@ class App extends Component {
     map: {},
     markers: [],
     infowindow: {},
-    serverVenues: [],
+    serverVenues: []
   }
   
   CLIENT_ID = 'JMMI3TQMXGFIN3ZYY5NN4SEGLG0QD31ZRSOUAWUT0FU2KCUF'
@@ -18,27 +18,42 @@ class App extends Component {
   todaysData = '20190502'
   venuesID = []
 
+
+  /*
+    REVIEWER:
+
+    Hi! :D
+    I've commented out some of the code and called you like that (REVIEWER) another time below with another question!
+
+    First one: I tried to use that fetch below on my FourSquareAPI file and couldn't call it here.
+    All I got back was 'Object(...)(...) is not defined' or something like that.
+    Made the same thing but ending with .then(data => data.response.venues) and got that error.
+
+    Second one: also tried to make another fetch, like getAllID, to use each venues ID to get venues data and got nothing.
+
+  */
+
   componentDidMount() {
     // Fetches Rock bars in New York City
     fetch(this.api + 'search?query=' + this.query + '&near=' + this.near + '&client_id=' + this.CLIENT_ID +
     '&client_secret=' + this.CLIENT_SECRET + '&v=' + this.todaysData)
-     .then(res => res.json())
-     .then(data => {
-       this.setState({serverVenues: data.response.venues})
-       data.response.venues.forEach(element => {
-         this.venuesID.push(element.id)
-        });
-        this.renderMap(); // Begins the map render
-      })
-      .catch( error => {
-        window.alert('An error ocorred: ' + error)
-        console.log(error);
-      })
+    .then(res => res.json())
+    .then(data => {
+      this.setState({serverVenues: data.response.venues})
+      data.response.venues.forEach(element => {
+        this.venuesID.push(element.id)
+      });
+      this.renderMap(); // Begins the map render
+    })
+    .catch( error => {
+      window.alert('An error ocorred: ' + error)
+      console.log(error);
+    })
   }
 
   // Since Google Maps API needs the <script>, let's create it and start the map
   renderMap = () => {
-    loadScript('https://maps.googleapis.com/maps/api/js?key=MYAPIKEY&libraries=geometry&callback=initMap')
+    loadScript('https://maps.googleapis.com/maps/api/js?key=MYAPIKEY&callback=initMap')
     window.initMap = this.initMap
   }
 
@@ -74,29 +89,12 @@ class App extends Component {
       }
     })
   }
-
-/*  getData = () => {
-    let places = [];
-    this.venuesID.map((location) =>
-      fetch('https://api.foursquare.com/v2/venues/4b832fc3f964a52065fc30e3?client_id=JMMI3TQMXGFIN3ZYY5NN4SEGLG0QD31ZRSOUAWUT0FU2KCUF&client_secret=WQNXVXEP4VIACTXQQ4PLYJIRR4EYKZRYHXF0VNS3IWTQBODW&v=20190430')
-        .then(response => response.json())
-        .then(data => console.log(data))
-        .catch(error => {
-          console.log(error);
-        })
-    );
-    // Updates the markers state with the data obtained
-    this.setState({venuesInfo: places});
-  }
-*/
   
   // The map!
   initMap = () => {
-    //this.getData();
-    //console.log(this.state.venuesInfo);
-    // Creates the map at a point of Belo Horizonte, Brazil
+    // Creates the map at a point of New York, USA
     let map = new window.google.maps.Map(document.getElementById('map'), {
-      center:{lat: -19.9408184, lng: -43.9355109},
+      center:{lat: 40.6971494, lng: -74.2598674},
       zoom: 16,
       mapTypeControl: false,
       fullscreenControle: false,
@@ -107,50 +105,58 @@ class App extends Component {
     
     let bounds = new window.google.maps.LatLngBounds();
 
-    //let geocoder = new window.google.maps.Geocoder();
-    
     let buildMarkers = this.state.serverVenues;
 
     let allMarkers = this.state.markers;
 
-    // This function populates the infowindow when the marker is clicked. We'll only allow
-      // one infowindow which will open at the marker that is clicked, and populate based
-      // on that markers position.
-      function populateInfoWindow(marker, infowindow, lat, lng) {
-        // Check to make sure the infowindow is not already opened on this marker.
-        if (infowindow.marker !== marker) {
-          // Clear the infowindow content to give the streetview time to load.
-          infowindow.setContent('');
-          infowindow.marker = marker;
-          // Make sure the marker property is cleared if the infowindow is closed.
-          infowindow.addListener('closeclick', function() {
-            infowindow.marker = null;
-          });
-          var streetViewService = new window.google.maps.StreetViewService();
-          var radius = 50;
-          // In case the status is OK, which means the pano was found, compute the
-          // position of the streetview image, then calculate the heading, then get a
-          // panorama from that and set the options
-          function getStreetView(data, status) {
-            if (status === window.google.maps.StreetViewStatus.OK) {
-              var nearStreetViewLocation = data.location.latLng;
-              var heading = window.google.maps.geometry.spherical.computeHeading(
-                nearStreetViewLocation, marker.position);
-                infowindow.setContent('<div>'+
-                '<img src="https://maps.googleapis.com/maps/api/streetview?size=200x200&location='+ marker.lat +','+marker.lng+'&heading=151.78&pitch=-0.76&key=MYAPIKEY&signature=MYSIGNATURE"><br>'+
-                '<h2 class="info-name">'+marker.name+'</h2>'+
-                '<p class="info-address">Address: '+marker.address+'</p>'+
-                '<p class="info-rating">Rating: '+marker.rating+'</p>'+
-                '<p class="info-likes">Likes: '+marker.likes+'</p>'+
-                '<div id="pano"></div>' +
-                '</div>');
-                var panoramaOptions = {
-                  position: nearStreetViewLocation,
-                  pov: {
-                    heading: heading,
-                    pitch: 30
-                  }
-                };
+    // Infowindow creator
+    function populateInfoWindow(marker, infowindow) {
+      if (infowindow.marker !== marker) {
+        infowindow.setContent(''); // Resets the content
+        infowindow.marker = marker; // Gets current clicked marker
+        infowindow.addListener('closeclick', function() {
+          infowindow.marker = null;
+        });
+        
+        // An attempt to use street view static images
+        let streetViewService = new window.google.maps.StreetViewService();
+        let radius = 50;
+        
+        // Gets and sets content to the clicked marker's infowindow
+        function getStreetView(data, status) {
+          if (status === window.google.maps.StreetViewStatus.OK) {
+            let nearStreetViewLocation = data.location.latLng;
+            let heading = window.google.maps.geometry.spherical.computeHeading(
+            nearStreetViewLocation, marker.position);
+
+            /*
+              REVIEWER:
+              Why can't I see these images below?
+
+              Even locally, that foursquareLogo isn't appearing to me.
+
+              My API src too, I really think it should be working. Could it be my key?
+            */
+
+            let foursquareLogo = './icons/foursquare.png';
+            infowindow.setContent(
+              '<div>'+
+              '<img src="https://maps.googleapis.com/maps/api/streetview?size=200x200&location='+ marker.lat +','+marker.lng+
+              '&heading=151.78&pitch=-0.76&key=MYAPIKEY&signature=MYSIGN"><br>'+
+              '<h2>'+marker.name+'</h2>'+
+              '<p>Address: '+marker.address+'</p>'+
+              '<p>Rating: '+marker.rating+'</p>'+ // NOT IMPLEMENTED YET!
+              '<p>Likes: '+marker.likes+'</p>'+ // NOT IMPLEMENTED YET!
+              '<div id="pano"></div>' +
+              '<img src=' + foursquareLogo+ ' alt="Powered by Foursquare"><br>'+
+              '</div>');
+              var panoramaOptions = {
+                position: nearStreetViewLocation,
+                pov: {
+                  heading: heading,
+                  pitch: 30
+                }
+              }
               var panorama = new window.google.maps.StreetViewPanorama(
                 document.getElementById('pano'), panoramaOptions);
             } else {
@@ -158,10 +164,7 @@ class App extends Component {
                 '<div>No Street View Found</div>');
             }
           }
-          // Use streetview service to get the closest streetview image within
-          // 50 meters of the markers position
           streetViewService.getPanoramaByLocation(marker.position, radius, getStreetView);
-          // Open the infowindow on the correct marker.
           infowindow.open(map, marker);
         }
       }
@@ -171,25 +174,6 @@ class App extends Component {
       let position = {lat: buildMarkers[i].location.lat, lng: buildMarkers[i].location.lng};
       let name = buildMarkers[i].name;
       let id = buildMarkers[i].id;
-
-      /*
-        Since Geocoder needs billing information that I won't provide, I can't make it work with my project.
-        If you are willing to test it with yours, you have to uncomment:
-        - the 'let geocoder' line;
-        - the let address below;
-        - geocoder.geocode function.
-        Then, comment out the "let address" and if below.
-
-        let address;
-        geocoder.geocode({'location': position}, function(results, status) {
-          if (status === 'OK') {
-            if(results[0]) {
-              address = results[0].formatted_address;
-            }
-          }
-        })
-      */
-
       let address = buildMarkers[i].location.address;
       if(address === undefined) {
         address = 'There\'s no address on FourSquare'
@@ -218,7 +202,7 @@ class App extends Component {
 
       // When a marker gets clicked ..
       marker.addListener('click', function() {
-        populateInfoWindow(this, buildInfowindow, lat, lng);
+        populateInfoWindow(this, buildInfowindow);
         // .. animates it once and ..
         if (marker.getAnimation() !== null) {
           marker.setAnimation(null);
@@ -242,32 +226,12 @@ class App extends Component {
     })
     console.log(allMarkers)
 
-    // Stores all map data globally
+    // Stores all map data in states
     this.setState({markers: allMarkers, map: map, infowindow: buildInfowindow});
 
     document.getElementById('show-listings').addEventListener('click', this.showListings);
     document.getElementById('hide-listings').addEventListener('click', this.hideListings);
   }
-
-  // This will be (not yet) used to local data, maybe
-  locations = [
-  {
-    title: 'Jack Rock Bar',
-    position: {lat: -19.9397354, lng: -43.9318726}
-  }, {
-    title: 'Lord Pub',
-    position: {lat: -19.9402615, lng: -43.9365341}
-  }, {
-    title: 'Estágio Rock Bar',
-    position: {lat: -19.941599, lng: -43.937418}
-  }, {
-    title: 'Beb\'s Contorno',
-    position: {lat: -19.9407569, lng: -43.9363852}
-  }, {
-    title: 'Rock Esporte Clube',
-    position: {lat: -19.9403498, lng: -43.9380091}
-  }
-  ]
 
   render() {
     return (
