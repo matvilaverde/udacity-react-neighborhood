@@ -1,19 +1,9 @@
 const CLIENT_ID = 'JMMI3TQMXGFIN3ZYY5NN4SEGLG0QD31ZRSOUAWUT0FU2KCUF'
-const CLIENT_SECRET = 'WQNXVXEP4VIACTXQQ4PLYJIRR4EYKZRYHXF0VNS3IWTQBODW'
+const CLIENT_SECRET = '2O0XX4VTVFFYVDKT3KFXXXP0BNUS2YR2ZSDHULMLTF4JSLJ4'
 const api = "https://api.foursquare.com/v2/venues/"
-const query = '%22rock%20bar%22';
-const near = 'New York, USA';
-const todaysData = '20190503'
-
-/*
-    Ways I got to test and use the API, just some notes, you can ignore it! :)
-
-    https://api.foursquare.com/v2/venues/search?query=%22rock%20bar%22&near=%22Belo%20Horizonte%22&client_id=JMMI3TQMXGFIN3ZYY5NN4SEGLG0QD31ZRSOUAWUT0FU2KCUF&client_secret=WQNXVXEP4VIACTXQQ4PLYJIRR4EYKZRYHXF0VNS3IWTQBODW&v=20190430
-
-    `${api}query=${query}&near=${near}?client_id=${CLIENT_ID}&client_secret=${CLIENT_SECRET}&v=20190430`
-
-    api + 'query=' + query + '&near=' + near + '&client_id=' + CLIENT_ID + '&client_secret=' + CLIENT_SECRET + '&v=' + todaysData
-*/
+const query = '%22rock%20bar%22'
+const near = 'New York, USA'
+const todaysData = '20190506'
 
 export const getSearch = () => {
     // Fetches Rock bars in New York City

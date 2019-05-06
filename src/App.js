@@ -9,21 +9,20 @@ class App extends Component {
     map: {},
     markers: [],
     infowindow: {},
-    serverVenues: []
+    serverVenues: [],
+    venuesPics: []
   }
-  
-  CLIENT_ID = 'JMMI3TQMXGFIN3ZYY5NN4SEGLG0QD31ZRSOUAWUT0FU2KCUF'
-  CLIENT_SECRET = 'WQNXVXEP4VIACTXQQ4PLYJIRR4EYKZRYHXF0VNS3IWTQBODW'
-  api = "https://api.foursquare.com/v2/venues/"
-  query = '%22rock%20bar%22';
-  near = 'New York, United States of America';
-  todaysData = '20190502'
-  venuesID = []
 
   componentDidMount() {
     FourSquareAPI.getSearch().then(res => {
       this.setState({serverVenues: res})
       this.renderMap(); // Begins the map render
+      let photos = this.state.venuesPics;
+      for(let i = 0; i < this.state.serverVenues.length; i++) {
+        FourSquareAPI.getInfo(this.state.serverVenues[i].id)
+        .then(data => photos.push(data.bestPhoto))
+      }
+      this.setState({venuesPics: photos})
     })
   }
 
@@ -52,12 +51,11 @@ class App extends Component {
     this.state.infowindow.close();
 
     let markers = this.state.markers;
-    console.log(markers)
     markers.forEach((marker) => {
       if(marker.name === barName) {
         this.state.infowindow.setContent(
           '<div>'+
-          //'<img src="'+ marker.bestPhoto + '"><br>'+
+          marker.bestPhoto + '<br>' +
           '<h2>'+marker.name+'</h2>'+
           '<p>Address: '+marker.address+'</p>'+
           '<p>Postal Code: '+marker.postal+'</p>'+
@@ -94,6 +92,8 @@ class App extends Component {
 
     let buildMarkers = this.state.serverVenues;
 
+    let buildPics = this.state.venuesPics;
+
     let allMarkers = this.state.markers;
 
     // Gets API data and inserts in a bunch of markers, creating them
@@ -116,8 +116,12 @@ class App extends Component {
       }
       let catName = buildMarkers[i].categories[0].name;
       let icon = buildMarkers[i].categories[0].icon.prefix + '32' + buildMarkers[i].categories[0].icon.suffix;
-      //let bestPhoto = buildMarkers[i].bestPhoto.prefix + '300x300' + buildMarkers[i].bestPhoto.suffix;
-      // usar a id somente para adquirir as fotos pelo FourSquare?
+      let bestPhoto;
+      if(buildPics[i] === undefined) {
+        bestPhoto = 'There\'s no picture for this venue'
+      } else {
+        bestPhoto = '<img src="'+ buildPics[i].prefix + '300x300' + buildPics[i].suffix +'">'
+      }
 
       let marker = new window.google.maps.Marker({
         id: id,
@@ -131,7 +135,7 @@ class App extends Component {
         postal: postal,
         catName: catName,
         icon: icon,
-        //bestPhoto: bestPhoto,
+        bestPhoto: bestPhoto,
         animation: window.google.maps.Animation.DROP
       })
 
@@ -142,13 +146,13 @@ class App extends Component {
       marker.addListener('click', function() {
         buildInfowindow.setContent(
           '<div>'+
-          //'<img src="'+ marker.bestPhoto + '"><br>'+
+          marker.bestPhoto + '<br>' +
           '<h2>'+marker.name+'</h2>'+
           '<p>Address: '+marker.address+'</p>'+
           '<p>Postal Code: '+marker.postal+'</p>'+
           '<p>Category: '+marker.catName+'</p>'+
           '<hr />' +
-          '<img src=' + FSLogo + ' width="20px" height="20px" alt="Powered by Foursquare"> Powered by Foursquare<br>'+
+          '<img src=' + FSLogo + ' width="20px" height="20px" alt="Foursquare logo"> Powered by Foursquare<br>'+
           '</div>'
         )
         buildInfowindow.open(map, marker)
@@ -173,7 +177,6 @@ class App extends Component {
       if (x > y) {return 1;}
       return 0;
     })
-    console.log(allMarkers)
 
     // Stores all map data in states
     this.setState({markers: allMarkers, map: map, infowindow: buildInfowindow});

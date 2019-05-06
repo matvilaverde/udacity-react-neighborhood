@@ -24,3 +24,10 @@ html, body {
   text-align: left;
   width: 30%;
 }
+
+@media (max-device-width: 360px)
+  and (max-device-height: 640px) { 
+  select {
+    width: 100%;
+  }
+}
