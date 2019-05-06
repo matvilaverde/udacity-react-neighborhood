@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
 import './App.css';
+import * as FourSquareAPI from './components/FourSquareAPI'
+import FSLogo from './icons/foursquare.png'
 
 class App extends Component {
 
@@ -18,42 +20,16 @@ class App extends Component {
   todaysData = '20190502'
   venuesID = []
 
-
-  /*
-    REVIEWER:
-
-    Hi! :D
-    I've commented out some of the code and called you like that (REVIEWER) another time below with another question!
-
-    First one: I tried to use that fetch below on my FourSquareAPI file and couldn't call it here.
-    All I got back was 'Object(...)(...) is not defined' or something like that.
-    Made the same thing but ending with .then(data => data.response.venues) and got that error.
-
-    Second one: also tried to make another fetch, like getAllID, to use each venues ID to get venues data and got nothing.
-
-  */
-
   componentDidMount() {
-    // Fetches Rock bars in New York City
-    fetch(this.api + 'search?query=' + this.query + '&near=' + this.near + '&client_id=' + this.CLIENT_ID +
-    '&client_secret=' + this.CLIENT_SECRET + '&v=' + this.todaysData)
-    .then(res => res.json())
-    .then(data => {
-      this.setState({serverVenues: data.response.venues})
-      data.response.venues.forEach(element => {
-        this.venuesID.push(element.id)
-      });
+    FourSquareAPI.getSearch().then(res => {
+      this.setState({serverVenues: res})
       this.renderMap(); // Begins the map render
-    })
-    .catch( error => {
-      window.alert('An error ocorred: ' + error)
-      console.log(error);
     })
   }
 
   // Since Google Maps API needs the <script>, let's create it and start the map
   renderMap = () => {
-    loadScript('https://maps.googleapis.com/maps/api/js?key=MYAPIKEY&callback=initMap')
+    loadScript('https://maps.googleapis.com/maps/api/js?key=AIzaSyAOFG5MfWrnTNAlxiYoko5BOd6s5RTHrhY&callback=initMap')
     window.initMap = this.initMap
   }
 
@@ -72,13 +48,24 @@ class App extends Component {
   }
 
   // When an option from the dropdown is selected, makes everything like a marker click
-  dropdownSelected = (barTitle) => {
+  dropdownSelected = (barName) => {
     this.state.infowindow.close();
 
     let markers = this.state.markers;
+    console.log(markers)
     markers.forEach((marker) => {
-      if(marker.title === barTitle) {
-        this.state.infowindow.setContent('will copy and paste from click\'s final version')
+      if(marker.name === barName) {
+        this.state.infowindow.setContent(
+          '<div>'+
+          //'<img src="'+ marker.bestPhoto + '"><br>'+
+          '<h2>'+marker.name+'</h2>'+
+          '<p>Address: '+marker.address+'</p>'+
+          '<p>Postal Code: '+marker.postal+'</p>'+
+          '<p>Category: '+marker.catName+'</p>'+
+          '<hr />' +
+          '<img src=' + FSLogo + ' width="20px" height="20px" alt="Powered by Foursquare"> Powered by Foursquare<br>'+
+          '</div>'
+        )
         this.state.infowindow.open(this.state.map, marker)
         if (marker.getAnimation() !== null) {
           marker.setAnimation(null);
@@ -109,79 +96,28 @@ class App extends Component {
 
     let allMarkers = this.state.markers;
 
-    // Infowindow creator
-    function populateInfoWindow(marker, infowindow) {
-      if (infowindow.marker !== marker) {
-        infowindow.setContent(''); // Resets the content
-        infowindow.marker = marker; // Gets current clicked marker
-        infowindow.addListener('closeclick', function() {
-          infowindow.marker = null;
-        });
-        
-        // An attempt to use street view static images
-        let streetViewService = new window.google.maps.StreetViewService();
-        let radius = 50;
-        
-        // Gets and sets content to the clicked marker's infowindow
-        function getStreetView(data, status) {
-          if (status === window.google.maps.StreetViewStatus.OK) {
-            let nearStreetViewLocation = data.location.latLng;
-            let heading = window.google.maps.geometry.spherical.computeHeading(
-            nearStreetViewLocation, marker.position);
-
-            /*
-              REVIEWER:
-              Why can't I see these images below?
-
-              Even locally, that foursquareLogo isn't appearing to me.
-
-              My API src too, I really think it should be working. Could it be my key?
-            */
-
-            let foursquareLogo = './icons/foursquare.png';
-            infowindow.setContent(
-              '<div>'+
-              '<img src="https://maps.googleapis.com/maps/api/streetview?size=200x200&location='+ marker.lat +','+marker.lng+
-              '&heading=151.78&pitch=-0.76&key=MYAPIKEY&signature=MYSIGN"><br>'+
-              '<h2>'+marker.name+'</h2>'+
-              '<p>Address: '+marker.address+'</p>'+
-              '<p>Rating: '+marker.rating+'</p>'+ // NOT IMPLEMENTED YET!
-              '<p>Likes: '+marker.likes+'</p>'+ // NOT IMPLEMENTED YET!
-              '<div id="pano"></div>' +
-              '<img src=' + foursquareLogo+ ' alt="Powered by Foursquare"><br>'+
-              '</div>');
-              var panoramaOptions = {
-                position: nearStreetViewLocation,
-                pov: {
-                  heading: heading,
-                  pitch: 30
-                }
-              }
-              var panorama = new window.google.maps.StreetViewPanorama(
-                document.getElementById('pano'), panoramaOptions);
-            } else {
-              infowindow.setContent('<div>' + marker.title + '</div>' +
-                '<div>No Street View Found</div>');
-            }
-          }
-          streetViewService.getPanoramaByLocation(marker.position, radius, getStreetView);
-          infowindow.open(map, marker);
-        }
-      }
-    
     // Gets API data and inserts in a bunch of markers, creating them
-    for(let i=0; i<buildMarkers.length; i++) {
+    for(let i = 0; i < buildMarkers.length; i++) {
       let position = {lat: buildMarkers[i].location.lat, lng: buildMarkers[i].location.lng};
       let name = buildMarkers[i].name;
       let id = buildMarkers[i].id;
       let address = buildMarkers[i].location.address;
       if(address === undefined) {
-        address = 'There\'s no address on FourSquare'
+        address = 'There\'s no address'
       }
       let lat = buildMarkers[i].location.lat;
       let lng = buildMarkers[i].location.lng;
-      let ratings = '';
-      let likes = ''
+      let postal = buildMarkers[i].location.postalCode;
+      if(buildMarkers[i].categories[0] === undefined) {
+        buildMarkers[i].categories[0] = {
+          name: 'Bar',
+          icon: {prefix: 'https://ss3.4sqi.net/img/categories_v2/nightlife/pub_',
+          suffix: '.png'}}
+      }
+      let catName = buildMarkers[i].categories[0].name;
+      let icon = buildMarkers[i].categories[0].icon.prefix + '32' + buildMarkers[i].categories[0].icon.suffix;
+      //let bestPhoto = buildMarkers[i].bestPhoto.prefix + '300x300' + buildMarkers[i].bestPhoto.suffix;
+      // usar a id somente para adquirir as fotos pelo FourSquare?
 
       let marker = new window.google.maps.Marker({
         id: id,
@@ -192,8 +128,10 @@ class App extends Component {
         address: address,
         lat: lat,
         lng: lng,
-        ratings: ratings,
-        likes: likes,
+        postal: postal,
+        catName: catName,
+        icon: icon,
+        //bestPhoto: bestPhoto,
         animation: window.google.maps.Animation.DROP
       })
 
@@ -202,7 +140,18 @@ class App extends Component {
 
       // When a marker gets clicked ..
       marker.addListener('click', function() {
-        populateInfoWindow(this, buildInfowindow);
+        buildInfowindow.setContent(
+          '<div>'+
+          //'<img src="'+ marker.bestPhoto + '"><br>'+
+          '<h2>'+marker.name+'</h2>'+
+          '<p>Address: '+marker.address+'</p>'+
+          '<p>Postal Code: '+marker.postal+'</p>'+
+          '<p>Category: '+marker.catName+'</p>'+
+          '<hr />' +
+          '<img src=' + FSLogo + ' width="20px" height="20px" alt="Powered by Foursquare"> Powered by Foursquare<br>'+
+          '</div>'
+        )
+        buildInfowindow.open(map, marker)
         // .. animates it once and ..
         if (marker.getAnimation() !== null) {
           marker.setAnimation(null);
