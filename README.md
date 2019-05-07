@@ -16,7 +16,13 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 
 * Your system should open a browser's page on [_localhost:3000_](localhost:3000);
 
-* If you want to test it already, please be connected to the internet (no SW yet);
+* With create-react-app the service worker only works in production mode. You can do it by using the following commands
+. npm run build
+. serve -s build
+. Visit [_localhost:5000_](localhost:5000)
 
 ## References
 * [Yahya Elharony's tutorial to use the Script tag in React](https://www.youtube.com/watch?v=W5LhLZqj76s)
+* [Google Maps API documentation](https://developers.google.com/maps/documentation/javascript/tutorial)
+* [Foursquare API documentation](https://developer.foursquare.com/)
+* [Sarah Frisk's Assassin's Creed style map](https://snazzymaps.com/style/72543/assassins-creed-iv)
